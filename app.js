@@ -7,6 +7,7 @@ class ChessApp {
         this.selectedSquare = null;
         this.validMoves = [];
         this.isLocalPlay = false; // Track if in local play mode
+        this.lastCheckState = false; // Track check state to show notification only once
 
         this.initializeUI();
         this.setupEventListeners();
@@ -369,8 +370,17 @@ class ChessApp {
         } else if (state.inCheck) {
             this.elements.gameStatus.textContent = `${state.currentTurn.charAt(0).toUpperCase() + state.currentTurn.slice(1)} is in check!`;
             this.elements.gameStatus.classList.add('check');
+
+            // Show check notification only when check state changes
+            if (!this.lastCheckState) {
+                setTimeout(() => {
+                    alert(`Check! ${state.currentTurn.charAt(0).toUpperCase() + state.currentTurn.slice(1)}'s king is under attack!`);
+                }, 100);
+            }
+            this.lastCheckState = true;
         } else {
             this.elements.gameStatus.textContent = '';
+            this.lastCheckState = false;
         }
 
         this.elements.turnText.textContent = `${state.currentTurn.charAt(0).toUpperCase() + state.currentTurn.slice(1)}'s Turn`;
@@ -424,9 +434,11 @@ class ChessApp {
             this.game.reset();
             this.selectedSquare = null;
             this.validMoves = [];
+            this.lastCheckState = false;
             this.renderBoard();
 
-            if (this.connection.isConnected()) {
+            // Send message to opponent if in online mode
+            if (!this.isLocalPlay && this.connection.isConnected()) {
                 this.connection.sendMessage({ type: 'newGame' });
             }
         }
@@ -437,18 +449,35 @@ class ChessApp {
             this.game.reset();
             this.selectedSquare = null;
             this.validMoves = [];
+            this.lastCheckState = false;
             this.renderBoard();
         }
     }
 
     handleResign() {
         if (confirm('Are you sure you want to resign?')) {
-            const winner = this.playerColor === 'white' ? 'black' : 'white';
+            let winner, loser;
+            if (this.isLocalPlay) {
+                // In local play, determine winner based on current turn
+                loser = this.game.currentTurn;
+                winner = loser === 'white' ? 'black' : 'white';
+            } else {
+                // In online play, the resigning player loses
+                loser = this.playerColor;
+                winner = this.playerColor === 'white' ? 'black' : 'white';
+            }
+
             this.game.isGameOver = true;
             this.game.winner = winner;
             this.renderBoard();
 
-            if (this.connection.isConnected()) {
+            // Show resignation result
+            setTimeout(() => {
+                alert(`${loser.charAt(0).toUpperCase() + loser.slice(1)} resigned. ${winner.charAt(0).toUpperCase() + winner.slice(1)} wins!`);
+            }, 100);
+
+            // Send message to opponent if in online mode
+            if (!this.isLocalPlay && this.connection.isConnected()) {
                 this.connection.sendMessage({ type: 'resign' });
             }
         }
