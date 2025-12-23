@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Chess - Play Chess Peer-to-Peer</title>
+    <meta name="description" content="Play chess with a friend using peer-to-peer WebRTC connection. No server required!">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♔ P2P Chess ♚</h1>
+            <p class="subtitle">Serverless Peer-to-Peer Chess Game</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Connection Panel -->
+            <div class="panel connection-panel" id="connectionPanel">
+                <h2>Connection</h2>
+                
+                <div class="connection-status">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="statusText">Not Connected</span>
+                </div>
+
+                <div class="connection-options" id="connectionOptions">
+                    <button class="btn btn-primary" id="createRoomBtn">
+                        <span class="btn-icon">🎮</span>
+                        Create Room
+                    </button>
+                    <button class="btn btn-secondary" id="joinRoomBtn">
+                        <span class="btn-icon">🔗</span>
+                        Join Room
+                    </button>
+                </div>
+
+                <!-- Create Room Flow -->
+                <div class="connection-flow hidden" id="createFlow">
+                    <div class="step-indicator">Step <span id="createStep">1</span> of 2</div>
+                    
+                    <div class="step" id="createStep1">
+                        <h3>Step 1: Share Your Offer Code</h3>
+                        <p class="instruction">Copy this code and send it to your opponent via chat, email, or any messaging app:</p>
+                        <div class="code-container">
+                            <textarea id="offerCode" readonly></textarea>
+                            <button class="btn btn-copy" id="copyOfferBtn">
+                                <span class="btn-icon">📋</span>
+                                Copy Code
+                            </button>
+                        </div>
+                        <button class="btn btn-secondary" id="nextToStep2Btn">
+                            Next: Receive Answer Code
+                        </button>
+                    </div>
+
+                    <div class="step hidden" id="createStep2">
+                        <h3>Step 2: Paste Answer Code</h3>
+                        <p class="instruction">Paste the answer code you received from your opponent:</p>
+                        <div class="code-container">
+                            <textarea id="answerCodeInput" placeholder="Paste answer code here..."></textarea>
+                            <button class="btn btn-primary" id="submitAnswerBtn">
+                                <span class="btn-icon">✓</span>
+                                Connect
+                            </button>
+                        </div>
+                        <button class="btn btn-text" id="backToStep1Btn">← Back</button>
+                    </div>
+                </div>
+
+                <!-- Join Room Flow -->
+                <div class="connection-flow hidden" id="joinFlow">
+                    <div class="step-indicator">Step <span id="joinStep">1</span> of 2</div>
+                    
+                    <div class="step" id="joinStep1">
+                        <h3>Step 1: Paste Offer Code</h3>
+                        <p class="instruction">Paste the offer code you received from your opponent:</p>
+                        <div class="code-container">
+                            <textarea id="offerCodeInput" placeholder="Paste offer code here..."></textarea>
+                            <button class="btn btn-primary" id="submitOfferBtn">
+                                <span class="btn-icon">✓</span>
+                                Generate Answer
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="step hidden" id="joinStep2">
+                        <h3>Step 2: Share Your Answer Code</h3>
+                        <p class="instruction">Copy this code and send it back to your opponent:</p>
+                        <div class="code-container">
+                            <textarea id="answerCode" readonly></textarea>
+                            <button class="btn btn-copy" id="copyAnswerBtn">
+                                <span class="btn-icon">📋</span>
+                                Copy Code
+                            </button>
+                        </div>
+                        <p class="success-message">✓ Waiting for connection...</p>
+                    </div>
+
+                    <button class="btn btn-text" id="cancelJoinBtn">← Cancel</button>
+                </div>
+
+                <button class="btn btn-text hidden" id="resetConnectionBtn">← Start Over</button>
+            </div>
+
+            <!-- Game Panel -->
+            <div class="panel game-panel">
+                <div class="game-info">
+                    <div class="player-info">
+                        <div class="player white-player">
+                            <div class="player-color white"></div>
+                            <span id="whitePlayerName">White</span>
+                        </div>
+                        <div class="turn-indicator" id="turnIndicator">
+                            <span id="turnText">White's Turn</span>
+                        </div>
+                        <div class="player black-player">
+                            <div class="player-color black"></div>
+                            <span id="blackPlayerName">Black</span>
+                        </div>
+                    </div>
+                    
+                    <div class="game-status" id="gameStatus"></div>
+                </div>
+
+                <div class="chess-board-container">
+                    <div class="board-wrapper">
+                        <div id="chessBoard" class="chess-board"></div>
+                    </div>
+                </div>
+
+                <div class="game-controls">
+                    <button class="btn btn-secondary" id="newGameBtn" disabled>
+                        <span class="btn-icon">🔄</span>
+                        New Game
+                    </button>
+                    <button class="btn btn-text" id="resignBtn" disabled>
+                        <span class="btn-icon">🏳️</span>
+                        Resign
+                    </button>
+                </div>
+
+                <div class="move-history">
+                    <h3>Move History</h3>
+                    <div id="moveList" class="move-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chess.js"></script>
+    <script src="webrtc.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
