@@ -6,6 +6,7 @@ class ChessApp {
         this.playerColor = null;
         this.selectedSquare = null;
         this.validMoves = [];
+        this.isLocalPlay = false; // Track if in local play mode
 
         this.initializeUI();
         this.setupEventListeners();
@@ -20,6 +21,7 @@ class ChessApp {
             statusIndicator: document.getElementById('statusIndicator'),
             statusText: document.getElementById('statusText'),
             connectionOptions: document.getElementById('connectionOptions'),
+            localPlayBtn: document.getElementById('localPlayBtn'),
             createRoomBtn: document.getElementById('createRoomBtn'),
             joinRoomBtn: document.getElementById('joinRoomBtn'),
 
@@ -63,6 +65,7 @@ class ChessApp {
 
     setupEventListeners() {
         // Connection buttons
+        this.elements.localPlayBtn.addEventListener('click', () => this.handleLocalPlay());
         this.elements.createRoomBtn.addEventListener('click', () => this.handleCreateRoom());
         this.elements.joinRoomBtn.addEventListener('click', () => this.handleJoinRoom());
 
@@ -92,6 +95,18 @@ class ChessApp {
         this.connection.onConnectionStateChange((state) => {
             this.updateConnectionStatus(state);
         });
+    }
+
+    handleLocalPlay() {
+        this.isLocalPlay = true;
+        this.elements.connectionOptions.classList.add('hidden');
+        this.elements.resetConnectionBtn.classList.remove('hidden');
+        this.elements.statusIndicator.classList.add('connected');
+        this.elements.statusText.textContent = 'Local Play Mode';
+        this.elements.whitePlayerName.textContent = 'White';
+        this.elements.blackPlayerName.textContent = 'Black';
+        this.elements.newGameBtn.disabled = false;
+        this.elements.resignBtn.disabled = false;
     }
 
     async handleCreateRoom() {
@@ -193,6 +208,7 @@ class ChessApp {
         this.elements.createStep.textContent = '1';
         this.elements.joinStep.textContent = '1';
 
+        this.isLocalPlay = false;
         this.updateConnectionStatus('disconnected');
         this.playerColor = null;
         this.updatePlayerNames();
@@ -277,9 +293,10 @@ class ChessApp {
     }
 
     handleSquareClick(row, col) {
-        // Only allow moves if it's the player's turn and game is not over
+        // Only allow moves if game is not over
         if (this.game.isGameOver) return;
-        if (this.playerColor && this.game.currentTurn !== this.playerColor) return;
+        // In online mode, only allow moves on your turn
+        if (!this.isLocalPlay && this.playerColor && this.game.currentTurn !== this.playerColor) return;
 
         const piece = this.game.board[row][col];
 

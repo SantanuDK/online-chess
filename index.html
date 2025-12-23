@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P2P Chess - Play Chess Peer-to-Peer</title>
-    <meta name="description" content="Play chess with a friend using peer-to-peer WebRTC connection. No server required!">
+    <meta name="description"
+        content="Play chess with a friend using peer-to-peer WebRTC connection. No server required!">
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -21,30 +24,35 @@
             <!-- Connection Panel -->
             <div class="panel connection-panel" id="connectionPanel">
                 <h2>Connection</h2>
-                
+
                 <div class="connection-status">
                     <div class="status-indicator" id="statusIndicator"></div>
                     <span id="statusText">Not Connected</span>
                 </div>
 
                 <div class="connection-options" id="connectionOptions">
-                    <button class="btn btn-primary" id="createRoomBtn">
+                    <button class="btn btn-primary" id="localPlayBtn">
                         <span class="btn-icon">🎮</span>
-                        Create Room
+                        Local Play (Test Mode)
+                    </button>
+                    <button class="btn btn-secondary" id="createRoomBtn">
+                        <span class="btn-icon">🌐</span>
+                        Create Online Room
                     </button>
                     <button class="btn btn-secondary" id="joinRoomBtn">
                         <span class="btn-icon">🔗</span>
-                        Join Room
+                        Join Online Room
                     </button>
                 </div>
 
                 <!-- Create Room Flow -->
                 <div class="connection-flow hidden" id="createFlow">
                     <div class="step-indicator">Step <span id="createStep">1</span> of 2</div>
-                    
+
                     <div class="step" id="createStep1">
                         <h3>Step 1: Share Your Offer Code</h3>
-                        <p class="instruction">Copy this code and send it to your opponent via chat, email, or any messaging app:</p>
+                        <p class="instruction">Copy this code and send it to your opponent via chat, email, or any
+                            messaging app:</p>
                         <div class="code-container">
                             <textarea id="offerCode" readonly></textarea>
                             <button class="btn btn-copy" id="copyOfferBtn">
@@ -74,7 +82,7 @@
                 <!-- Join Room Flow -->
                 <div class="connection-flow hidden" id="joinFlow">
                     <div class="step-indicator">Step <span id="joinStep">1</span> of 2</div>
-                    
+
                     <div class="step" id="joinStep1">
                         <h3>Step 1: Paste Offer Code</h3>
                         <p class="instruction">Paste the offer code you received from your opponent:</p>
@@ -122,7 +130,7 @@
                             <span id="blackPlayerName">Black</span>
                         </div>
                     </div>
-                    
+
                     <div class="game-status" id="gameStatus"></div>
                 </div>
 
@@ -155,4 +163,5 @@
     <script src="webrtc.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
