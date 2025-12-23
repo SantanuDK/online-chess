@@ -361,10 +361,8 @@ class ChessGame {
             }
         }
 
-        // Pawn promotion
-        if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
-            this.board[toRow][toCol] = { type: 'queen', color: piece.color };
-        }
+        // Check for pawn promotion (don't auto-promote)
+        const needsPromotion = piece.type === 'pawn' && (toRow === 0 || toRow === 7);
 
         // Record move
         const moveNotation = this.getMoveNotation(piece, fromRow, fromCol, toRow, toCol, capturedPiece, isCastling, isEnPassant);
@@ -375,6 +373,39 @@ class ChessGame {
 
         // Check for game over
         this.checkGameOver();
+
+        // Return promotion info if needed
+        if (needsPromotion) {
+            return { success: true, promotion: { row: toRow, col: toCol, color: piece.color } };
+        }
+
+        return { success: true };
+    }
+
+    promotePawn(row, col, pieceType) {
+        const piece = this.board[row][col];
+        if (!piece || piece.type !== 'pawn') {
+            return false;
+        }
+
+        // Promote to the selected piece
+        this.board[row][col] = { type: pieceType, color: piece.color };
+
+        // Update move notation
+        const notationMap = {
+            queen: 'Q',
+            rook: 'R',
+            bishop: 'B',
+            knight: 'N'
+        };
+
+        if (this.moveHistory.length > 0) {
+            const lastMoveIndex = this.moveHistory.length - 1;
+            let lastMove = this.moveHistory[lastMoveIndex];
+            // Append =Piece
+            lastMove += `=${notationMap[pieceType]}`;
+            this.moveHistory[lastMoveIndex] = lastMove;
+        }
 
         return true;
     }

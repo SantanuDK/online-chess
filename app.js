@@ -8,6 +8,7 @@ class ChessApp {
         this.validMoves = [];
         this.isLocalPlay = false; // Track if in local play mode
         this.lastCheckState = false; // Track check state to show notification only once
+        this.pendingPromotion = null; // Track pending promotion {row, col, color, fromRow, fromCol}
 
         this.initializeUI();
         this.setupEventListeners();
@@ -60,7 +61,14 @@ class ChessApp {
             gameStatus: document.getElementById('gameStatus'),
             newGameBtn: document.getElementById('newGameBtn'),
             resignBtn: document.getElementById('resignBtn'),
-            moveList: document.getElementById('moveList')
+            moveList: document.getElementById('moveList'),
+
+            // Promotion modal
+            promotionModal: document.getElementById('promotionModal'),
+            queenSymbol: document.getElementById('queenSymbol'),
+            rookSymbol: document.getElementById('rookSymbol'),
+            bishopSymbol: document.getElementById('bishopSymbol'),
+            knightSymbol: document.getElementById('knightSymbol')
         };
     }
 
@@ -86,6 +94,12 @@ class ChessApp {
         // Game controls
         this.elements.newGameBtn.addEventListener('click', () => this.handleNewGame());
         this.elements.resignBtn.addEventListener('click', () => this.handleResign());
+
+        // Promotion modal
+        const promotionButtons = document.querySelectorAll('.promotion-piece-btn');
+        promotionButtons.forEach(btn => {
+            btn.addEventListener('click', () => this.handlePromotionChoice(btn.dataset.piece));
+        });
     }
 
     setupConnectionHandlers() {
@@ -306,13 +320,24 @@ class ChessApp {
             const [selectedRow, selectedCol] = this.selectedSquare;
 
             // Try to make a move
-            if (this.game.makeMove(selectedRow, selectedCol, row, col)) {
+            const moveResult = this.game.makeMove(selectedRow, selectedCol, row, col);
+            if (moveResult && moveResult.success) {
                 this.selectedSquare = null;
                 this.validMoves = [];
-                this.renderBoard();
 
-                // Send move to opponent
-                this.sendMove(selectedRow, selectedCol, row, col);
+                // Check if promotion is needed
+                if (moveResult.promotion) {
+                    this.pendingPromotion = {
+                        ...moveResult.promotion,
+                        fromRow: selectedRow,
+                        fromCol: selectedCol
+                    };
+                    this.showPromotionModal(moveResult.promotion.color);
+                } else {
+                    this.renderBoard();
+                    // Send move to opponent
+                    this.sendMove(selectedRow, selectedCol, row, col);
+                }
             } else if (piece && piece.color === this.game.currentTurn) {
                 // Select a different piece
                 this.selectedSquare = [row, col];
@@ -399,12 +424,13 @@ class ChessApp {
         this.elements.moveList.scrollTop = this.elements.moveList.scrollHeight;
     }
 
-    sendMove(fromRow, fromCol, toRow, toCol) {
+    sendMove(fromRow, fromCol, toRow, toCol, promotionPiece = null) {
         if (this.connection.isConnected()) {
             this.connection.sendMessage({
                 type: 'move',
                 from: { row: fromRow, col: fromCol },
-                to: { row: toRow, col: toCol }
+                to: { row: toRow, col: toCol },
+                promotion: promotionPiece
             });
         }
     }
@@ -412,7 +438,7 @@ class ChessApp {
     handleRemoteMessage(data) {
         switch (data.type) {
             case 'move':
-                this.handleRemoteMove(data.from, data.to);
+                this.handleRemoteMove(data.from, data.to, data.promotion);
                 break;
             case 'newGame':
                 this.handleRemoteNewGame();
@@ -423,8 +449,13 @@ class ChessApp {
         }
     }
 
-    handleRemoteMove(from, to) {
-        if (this.game.makeMove(from.row, from.col, to.row, to.col)) {
+    handleRemoteMove(from, to, promotionPiece) {
+        const result = this.game.makeMove(from.row, from.col, to.row, to.col);
+        if (result && result.success) {
+            // If there's a promotion involved
+            if (result.promotion && promotionPiece) {
+                this.game.promotePawn(result.promotion.row, result.promotion.col, promotionPiece);
+            }
             this.renderBoard();
         }
     }
@@ -489,6 +520,47 @@ class ChessApp {
         this.game.isGameOver = true;
         this.game.winner = winner;
         this.renderBoard();
+    }
+
+    showPromotionModal(color) {
+        // Update piece symbols to match the color
+        const symbols = {
+            white: { queen: '♕', rook: '♖', bishop: '♗', knight: '♘' },
+            black: { queen: '♛', rook: '♜', bishop: '♝', knight: '♞' }
+        };
+
+        this.elements.queenSymbol.textContent = symbols[color].queen;
+        this.elements.rookSymbol.textContent = symbols[color].rook;
+        this.elements.bishopSymbol.textContent = symbols[color].bishop;
+        this.elements.knightSymbol.textContent = symbols[color].knight;
+
+        // Show modal
+        this.elements.promotionModal.classList.remove('hidden');
+    }
+
+    hidePromotionModal() {
+        this.elements.promotionModal.classList.add('hidden');
+    }
+
+    handlePromotionChoice(pieceType) {
+        if (!this.pendingPromotion) return;
+
+        const { row, col, fromRow, fromCol } = this.pendingPromotion;
+
+        // Promote the pawn
+        this.game.promotePawn(row, col, pieceType);
+
+        // Hide modal
+        this.hidePromotionModal();
+
+        // Render board
+        this.renderBoard();
+
+        // Send move and promotion to opponent
+        this.sendMove(fromRow, fromCol, row, col, pieceType);
+
+        // Clear pending promotion
+        this.pendingPromotion = null;
     }
 }
 
